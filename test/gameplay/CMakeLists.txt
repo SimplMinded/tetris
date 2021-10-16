@@ -1,0 +1,4 @@
+add_executable(gameplay_test test.cpp)
+
+add_custom_target(run_gameplay_tests gameplay_test)
+add_dependencies(run_gameplay_tests gameplay_test)
