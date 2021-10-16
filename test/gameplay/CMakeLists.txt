@@ -1,4 +1,5 @@
 add_executable(gameplay_test test.cpp)
+target_link_libraries(gameplay_test catch)
 
 add_custom_target(run_gameplay_tests gameplay_test)
 add_dependencies(run_gameplay_tests gameplay_test)
