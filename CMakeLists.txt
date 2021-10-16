@@ -11,6 +11,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Configured build type: ${CMAKE_BUILD_TYPE}")
 
+message(STATUS "Configuring vendor libraries")
+add_subdirectory(vendor)
+
 set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -25,9 +28,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 else()
     message(FATAL_ERROR "Compiler '${CMAKE_CXX_COMPILER_ID}' not supported!")
 endif()
-
-message(STATUS "Configuring vendor libraries")
-add_subdirectory(vendor)
 
 message(STATUS "Configuring libraries")
 add_subdirectory(lib)
