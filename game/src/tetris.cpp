@@ -6,28 +6,28 @@ int main()
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         // TODO: Logging.
-        printf("SDL initialization failed.\n");
+        fprintf(stderr, "SDL initialization failed: %s\n", SDL_GetError());
         return 1;
     }
 
     SDL_Window* window = SDL_CreateWindow("Tetris", 0, 0, 720, 480, SDL_WINDOW_OPENGL);
     if (window == nullptr) {
         // TODO: Logging.
-        printf("Window creation failed.\n");
+        fprintf(stderr, "Window creation failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
     if (SDL_GL_CreateContext(window) == nullptr) {
         // TODO: Logging.
-        printf("OpenGL context creation failed.\n");
+        fprintf(stderr, "OpenGL context creation failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
         // TODO: Logging.
-        printf("GLAD initialization failed.\n");
+        fprintf(stderr, "GLAD initialization failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
