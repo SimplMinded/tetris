@@ -106,12 +106,23 @@ int main()
     GL_ASSERT(glEnableVertexAttribArray(1));
     GL_ASSERT(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, r)));
 
-    Vertex vertices[3] = {
+    Vertex vertices[4] = {
         Vertex{ -0.5f, -0.5f, 0, 1, 0 },
-        Vertex{ 0.0f, 0.5f, 0, 1, 0 },
+        Vertex{ -0.5f, 0.5f, 0, 1, 0 },
+        Vertex{ 0.5f, 0.5f, 0, 1, 0 },
         Vertex{ 0.5f, -0.5f, 0, 1, 0 }
     };
-    GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(Vertex), vertices, GL_STATIC_DRAW));
+    GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(Vertex), vertices, GL_STATIC_DRAW));
+
+    uint32_t ibo;
+    GL_ASSERT(glGenBuffers(1, &ibo));
+    GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+
+    uint32_t indices[6] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+    GL_ASSERT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(uint32_t), indices, GL_STATIC_DRAW));
 
     GL_ASSERT(uint32_t vertexShader = glCreateShader(GL_VERTEX_SHADER));
     GL_ASSERT(glShaderSource(vertexShader, 1, &vertex_shader, nullptr));
@@ -161,7 +172,7 @@ int main()
     while (!SDL_QuitRequested())
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        GL_ASSERT(glDrawArrays(GL_TRIANGLES, 0, 3));
+        GL_ASSERT(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
         SDL_GL_SwapWindow(window);
     }
 
