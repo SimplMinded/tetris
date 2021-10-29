@@ -4,6 +4,8 @@
 #include <glad/glad.h>
 #include <SDL.h>
 
+#include "list_view.h"
+
 constexpr const char* vertex_shader = 
     "#version 400 core\n"
     "layout(location=0) in vec4 in_position;\n"
@@ -29,6 +31,14 @@ struct Vertex
     float r;
     float g;
     float b;
+};
+
+struct Quad
+{
+    Vertex bottomLeft;
+    Vertex topLeft;
+    Vertex topRight;
+    Vertex bottomRight;
 };
 
 static const char* getGlErrorMessage(GLenum error)
@@ -106,13 +116,7 @@ int main()
     GL_ASSERT(glEnableVertexAttribArray(1));
     GL_ASSERT(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, r)));
 
-    Vertex vertices[4] = {
-        Vertex{ -0.5f, -0.5f, 0, 1, 0 },
-        Vertex{ -0.5f, 0.5f, 0, 1, 0 },
-        Vertex{ 0.5f, 0.5f, 0, 1, 0 },
-        Vertex{ 0.5f, -0.5f, 0, 1, 0 }
-    };
-    GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(Vertex), vertices, GL_STATIC_DRAW));
+    GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW));
 
     uint32_t ibo;
     GL_ASSERT(glGenBuffers(1, &ibo));
@@ -169,9 +173,21 @@ int main()
     GL_ASSERT(glDeleteShader(vertexShader));
     GL_ASSERT(glDeleteShader(fragmentShader));
 
+    ListView<Quad> quads = makeListView(4, new Quad[4]);
+
     while (!SDL_QuitRequested())
     {
+        Quad quad = Quad{
+            Vertex{ -0.5f, -0.5f, 0, 1, 0 },
+            Vertex{ -0.5f, 0.5f, 0, 1, 0 },
+            Vertex{ 0.5f, 0.5f, 0, 1, 0 },
+            Vertex{ 0.5, -0.5f, 0, 1, 0 }
+        };
+
         glClear(GL_COLOR_BUFFER_BIT);
+        clear(quads);
+        add(quads, quad);
+        GL_ASSERT(glBufferSubData(GL_ARRAY_BUFFER, 0, quads.count * sizeof(Quad), quads.elems));
         GL_ASSERT(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
         SDL_GL_SwapWindow(window);
     }
