@@ -4,15 +4,19 @@
 #include <glad/glad.h>
 #include <SDL.h>
 
+#include "color.h"
 #include "list_view.h"
+#include "matrix.h"
+#include "point.h"
 
 constexpr const char* vertex_shader = 
     "#version 400 core\n"
     "layout(location=0) in vec4 in_position;\n"
     "layout(location=1) in vec3 in_color;\n"
+    "uniform mat4 u_projection;\n"
     "out vec4 vert_color;\n"
     "void main() {\n"
-    "  gl_Position = in_position;\n"
+    "  gl_Position = u_projection * in_position;\n"
     "  vert_color = vec4(in_color, 1);\n"
     "}\n";
 
@@ -26,11 +30,8 @@ constexpr const char* fragment_shader =
 
 struct Vertex
 {
-    float posX;
-    float posY;
-    float r;
-    float g;
-    float b;
+    Point position;
+    Color color;
 };
 
 struct Quad
@@ -62,6 +63,16 @@ static const char* getGlErrorMessage(GLenum error)
     x; \
     if (const GLenum error = glGetError(); error != GL_NO_ERROR) \
         fprintf(stderr, "[GL_ASSERT] %s:%d: \"%s\" (%s)\n", __FILE__, __LINE__, #x, getGlErrorMessage(error))
+
+Matrix makeOrthogonalProjectionMatrix(float left, float right, float top, float bottom, float near, float far)
+{
+    return makeMatrix(
+        2 / (right - left), 0, 0, (left + right) / (left - right),
+        0, 2 / (top - bottom), 0, (bottom + top) / (bottom - top),
+        0, 0, 2 / (near - far), (near + far) / (near - far),
+        0, 0, 0, 1
+    );
+}
 
 int main()
 {
@@ -114,7 +125,7 @@ int main()
     GL_ASSERT(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0));
 
     GL_ASSERT(glEnableVertexAttribArray(1));
-    GL_ASSERT(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, r)));
+    GL_ASSERT(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color)));
 
     GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW));
 
@@ -173,15 +184,19 @@ int main()
     GL_ASSERT(glDeleteShader(vertexShader));
     GL_ASSERT(glDeleteShader(fragmentShader));
 
+    Matrix projection = makeOrthogonalProjectionMatrix(0, 720, 0, 480, -1, 1);
+    GL_ASSERT(int32_t location = glGetUniformLocation(program, "u_projection"));
+    GL_ASSERT(glUniformMatrix4fv(location, 1, false, projection.elems));
+
     ListView<Quad> quads = makeListView(4, new Quad[4]);
 
     while (!SDL_QuitRequested())
     {
         Quad quad = Quad{
-            Vertex{ -0.5f, -0.5f, 0, 1, 0 },
-            Vertex{ -0.5f, 0.5f, 0, 1, 0 },
-            Vertex{ 0.5f, 0.5f, 0, 1, 0 },
-            Vertex{ 0.5, -0.5f, 0, 1, 0 }
+            Vertex{ Point{ 180, 120 }, Color{ 0, 1, 0 } },
+            Vertex{ Point{ 180, 360 }, Color{ 0, 1, 0 } },
+            Vertex{ Point{ 540, 360 }, Color{ 0, 1, 0 } },
+            Vertex{ Point{ 540, 120 }, Color{ 0, 1, 0 } }
         };
 
         glClear(GL_COLOR_BUFFER_BIT);
