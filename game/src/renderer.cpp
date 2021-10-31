@@ -10,6 +10,14 @@
 
 namespace {
 
+#define UNREACHABLE(...) \
+    do { \
+        fprintf(stderr, "[UNREACHABLE] %s:%d: ", __FILE__, __LINE__); \
+        fprintf(stderr, __VA_ARGS__); \
+        fprintf(stderr, "\n"); \
+        abort(); \
+    } while(false)
+
 constexpr int32_t position_index = 0;
 constexpr int32_t color_index = 1;
 
@@ -67,7 +75,7 @@ const char* getGlErrorMessage(GLenum error)
         case GL_STACK_OVERFLOW:
             return "Stack overflow";
         default:
-            return "Unknown error"; // TODO: Unreachable
+            UNREACHABLE("Unknown OpenGL error: %d", error);
     }
 }
 
@@ -89,7 +97,7 @@ const char* shaderTypeToString(GLenum shaderType)
     {
         case GL_VERTEX_SHADER: return "vertex shader";
         case GL_FRAGMENT_SHADER: return "fragment shader";
-        default: return "Unknown shader"; // TODO: Unreachable
+        default: UNREACHABLE("Unknown shader type: %d", shaderType);
     }
 }
 
