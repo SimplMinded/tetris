@@ -105,6 +105,8 @@ constexpr int32_t message_length = 1024;
 
 uint32_t createShader(GLenum type, const char* source)
 {
+    ASSERT(source != nullptr);
+
     GL_ASSERT(uint32_t shader = glCreateShader(type));
     GL_ASSERT(glShaderSource(shader, 1, &source, nullptr));
     GL_ASSERT(glCompileShader(shader));
@@ -265,6 +267,11 @@ void destroyRenderer()
     GL_ASSERT(glDeleteBuffers(1, &ibo));
     GL_ASSERT(glDeleteBuffers(1, &vbo));
     GL_ASSERT(glDeleteVertexArrays(1, &vao));
+
+    vao = 0;
+    vbo = 0;
+    ibo = 0;
+    program = 0;
 }
 
 void beginDrawing()
@@ -289,6 +296,12 @@ void endDrawing()
 
 void drawQuad(float x, float y, float width, float height, const Color& color)
 {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+    ASSERT(color.r >= 0 && color.r <= 1);
+    ASSERT(color.g >= 0 && color.g <= 1);
+    ASSERT(color.b >= 0 && color.b <= 1);
+
     const Quad quad = Quad{
         Vertex{ Point{ x, y }, color },
         Vertex{ Point{ x, y + height }, color },
