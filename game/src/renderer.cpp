@@ -91,6 +91,75 @@ const char* getGlErrorMessage(GLenum error)
         abort(); \
     }
 
+uint32_t createVertexArray()
+{
+    uint32_t vao;
+    GL_ASSERT(glGenVertexArrays(1, &vao));
+    GL_ASSERT(glBindVertexArray(vao));
+
+    return vao;
+}
+
+uint32_t createVertexBuffer(uint32_t maxSpriteCount)
+{
+    uint32_t vbo;
+    GL_ASSERT(glGenBuffers(1, &vbo));
+    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+
+    GL_ASSERT(glEnableVertexAttribArray(position_index));
+    GL_ASSERT(glVertexAttribPointer(
+        position_index,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        0));
+
+    GL_ASSERT(glEnableVertexAttribArray(color_index));
+    GL_ASSERT(glVertexAttribPointer(
+        color_index,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(Vertex),
+        (void*)offsetof(Vertex, color)));
+
+    GL_ASSERT(glBufferData(
+        GL_ARRAY_BUFFER,
+        maxSpriteCount * sizeof(Quad),
+        nullptr,
+        GL_DYNAMIC_DRAW));
+
+    return vbo;
+}
+
+uint32_t createIndexBuffer(uint32_t maxSpriteCount)
+{
+    uint32_t ibo;
+    GL_ASSERT(glGenBuffers(1, &ibo));
+    GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+
+    ListView<uint32_t> indices =
+        makeListView(maxSpriteCount * 6, new uint32_t[maxSpriteCount * 6]);
+    for (uint32_t index = 0; index < maxSpriteCount; index++)
+    {
+        add(indices, (index * 4) + 0);
+        add(indices, (index * 4) + 1);
+        add(indices, (index * 4) + 2);
+        add(indices, (index * 4) + 0);
+        add(indices, (index * 4) + 2);
+        add(indices, (index * 4) + 3);
+    }
+    GL_ASSERT(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        indices.count * sizeof(uint32_t),
+        indices.elems,
+        GL_STATIC_DRAW));
+    delete[] indices.elems;
+
+    return ibo;
+}
+
 const char* shaderTypeToString(GLenum shaderType)
 {
     switch (shaderType)
@@ -197,57 +266,9 @@ ListView<Quad> quads;
 
 void initRenderer(uint32_t maxSpriteCount, uint32_t windowWidth, uint32_t windowHeight)
 {
-    GL_ASSERT(glGenVertexArrays(1, &vao));
-    GL_ASSERT(glBindVertexArray(vao));
-
-    GL_ASSERT(glGenBuffers(1, &vbo));
-    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-
-    GL_ASSERT(glEnableVertexAttribArray(position_index));
-    GL_ASSERT(glVertexAttribPointer(
-        position_index,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(Vertex),
-        0));
-
-    GL_ASSERT(glEnableVertexAttribArray(color_index));
-    GL_ASSERT(glVertexAttribPointer(
-        color_index,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(Vertex),
-        (void*)offsetof(Vertex, color)));
-
-    GL_ASSERT(glBufferData(
-        GL_ARRAY_BUFFER,
-        maxSpriteCount * sizeof(Quad),
-        nullptr,
-        GL_DYNAMIC_DRAW));
-
-    GL_ASSERT(glGenBuffers(1, &ibo));
-    GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-
-    ListView<uint32_t> indices =
-        makeListView(maxSpriteCount * 6, new uint32_t[maxSpriteCount * 6]);
-    for (uint32_t index = 0; index < maxSpriteCount; index++)
-    {
-        add(indices, (index * 4) + 0);
-        add(indices, (index * 4) + 1);
-        add(indices, (index * 4) + 2);
-        add(indices, (index * 4) + 0);
-        add(indices, (index * 4) + 2);
-        add(indices, (index * 4) + 3);
-    }
-    GL_ASSERT(glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        indices.count * sizeof(uint32_t),
-        indices.elems,
-        GL_STATIC_DRAW));
-    delete[] indices.elems;
-
+    vao = createVertexArray();
+    vbo = createVertexBuffer(maxSpriteCount);
+    ibo = createIndexBuffer(maxSpriteCount);
     program = createShaderProgram(vertex_shader, fragment_shader);
 
     const Matrix projection =
