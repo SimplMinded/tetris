@@ -59,6 +59,7 @@ int main()
         bool pause;
         bool turnLeft;
         bool turnRight;
+        Point cursorPos;
     } input = {};
     while (!SDL_QuitRequested())
     {
@@ -95,6 +96,9 @@ int main()
                         case SDLK_e: input.turnRight = false; break;
                     }
                     break;
+                case SDL_MOUSEMOTION:
+                    input.cursorPos = Point{ (float)event.motion.x, (float)event.motion.y };
+                    break;
             }
         }
 
@@ -103,6 +107,9 @@ int main()
         Color color = input.drop ? Color{ 0, 1, 0 } : input.pause ? Color{ 1, 0, 0 } : Color{ 1, 1, 0 };
         int32_t width = input.turnLeft ? 180 : 360;
         int32_t height = input.turnRight ? 120 : 240;
+
+        if (!(input.cursorPos.x < posX || input.cursorPos.x > (posX + width) || input.cursorPos.y < posY || input.cursorPos.y > (posY + height)))
+            color = Color{ 0, 1, 1 };
 
         beginDrawing();
         drawQuad(posX, posY, width, height, color);
