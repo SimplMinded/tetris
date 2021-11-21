@@ -50,10 +50,62 @@ int main()
 
     glClearColor(1, 0, 1, 1);
 
+    struct {
+        bool left;
+        bool right;
+        bool down;
+        bool drop;
+        bool swap;
+        bool pause;
+        bool turnLeft;
+        bool turnRight;
+    } input = {};
     while (!SDL_QuitRequested())
     {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+                // TODO: Should we handle the quite event instead of using
+                //       SDL_QuitRequested?
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_a: input.left = true; break;
+                        case SDLK_d: input.right = true; break;
+                        case SDLK_s: input.down = true; break;
+                        case SDLK_SPACE: input.drop = true; break;
+                        case SDLK_w: input.swap = true; break;
+                        case SDLK_p: input.pause = true; break;
+                        case SDLK_q: input.turnLeft = true; break;
+                        case SDLK_e: input.turnRight = true; break;
+                    }
+                    break;
+                case SDL_KEYUP:
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_a: input.left = false; break;
+                        case SDLK_d: input.right = false; break;
+                        case SDLK_s: input.down = false; break;
+                        case SDLK_SPACE: input.drop = false; break;
+                        case SDLK_w: input.swap = false; break;
+                        case SDLK_p: input.pause = false; break;
+                        case SDLK_q: input.turnLeft = false; break;
+                        case SDLK_e: input.turnRight = false; break;
+                    }
+                    break;
+            }
+        }
+
+        int32_t posX = input.left ? input.right ? 180 : 90 : input.right ? 270 : 180;
+        int32_t posY = input.swap ? input.down ? 120 : 60 : input.down ? 180 : 120;
+        Color color = input.drop ? Color{ 0, 1, 0 } : input.pause ? Color{ 1, 0, 0 } : Color{ 1, 1, 0 };
+        int32_t width = input.turnLeft ? 180 : 360;
+        int32_t height = input.turnRight ? 120 : 240;
+
         beginDrawing();
-        drawQuad(180, 120, 360, 240, Color{ 0, 1, 0 });
+        drawQuad(posX, posY, width, height, color);
         endDrawing();
         SDL_GL_SwapWindow(window);
     }
