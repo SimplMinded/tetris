@@ -60,6 +60,9 @@ int main()
         bool turnLeft;
         bool turnRight;
         Point cursorPos;
+        bool leftMouseButton;
+        bool rightMouseButton;
+        bool middleMouseButton;
     } input = {};
     while (!SDL_QuitRequested())
     {
@@ -99,6 +102,16 @@ int main()
                 case SDL_MOUSEMOTION:
                     input.cursorPos = Point{ (float)event.motion.x, (float)event.motion.y };
                     break;
+                case SDL_MOUSEBUTTONUP:
+                case SDL_MOUSEBUTTONDOWN:
+                    bool newState = (event.button.state == SDL_PRESSED);
+                    switch (event.button.button)
+                    {
+                        case SDL_BUTTON_LEFT: input.leftMouseButton = newState; break;
+                        case SDL_BUTTON_RIGHT: input.rightMouseButton = newState; break;
+                        case SDL_BUTTON_MIDDLE: input.middleMouseButton = newState; break;
+                    }
+                    break;
             }
         }
 
@@ -109,7 +122,8 @@ int main()
         int32_t height = input.turnRight ? 120 : 240;
 
         if (!(input.cursorPos.x < posX || input.cursorPos.x > (posX + width) || input.cursorPos.y < posY || input.cursorPos.y > (posY + height)))
-            color = Color{ 0, 1, 1 };
+            if (input.leftMouseButton || input.rightMouseButton || input.middleMouseButton)
+                color = Color{ 0, 1, 1 };
 
         beginDrawing();
         drawQuad(posX, posY, width, height, color);
