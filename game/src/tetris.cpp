@@ -75,7 +75,7 @@ int main()
         {
             switch (event.type)
             {
-                // TODO: Should we handle the quite event instead of using
+                // TODO: Should we handle the quit event instead of using
                 //       SDL_QuitRequested?
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym)
