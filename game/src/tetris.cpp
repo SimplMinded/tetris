@@ -9,6 +9,7 @@
 #include "matrix.h"
 #include "point.h"
 #include "renderer.h"
+#include "vector.h"
 
 int main()
 {
@@ -63,9 +64,12 @@ int main()
         bool leftMouseButton;
         bool rightMouseButton;
         bool middleMouseButton;
+        Vector scroll;
     } input = {};
     while (!SDL_QuitRequested())
     {
+        input.scroll = {};
+
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -104,19 +108,28 @@ int main()
                     break;
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEBUTTONDOWN:
-                    bool newState = (event.button.state == SDL_PRESSED);
-                    switch (event.button.button)
                     {
-                        case SDL_BUTTON_LEFT: input.leftMouseButton = newState; break;
-                        case SDL_BUTTON_RIGHT: input.rightMouseButton = newState; break;
-                        case SDL_BUTTON_MIDDLE: input.middleMouseButton = newState; break;
+                        bool newState = (event.button.state == SDL_PRESSED);
+                        switch (event.button.button)
+                        {
+                            case SDL_BUTTON_LEFT: input.leftMouseButton = newState; break;
+                            case SDL_BUTTON_RIGHT: input.rightMouseButton = newState; break;
+                            case SDL_BUTTON_MIDDLE: input.middleMouseButton = newState; break;
+                        }
+                        break;
                     }
+                case SDL_MOUSEWHEEL:
+                    input.scroll.x = event.wheel.x;
+                    input.scroll.y =
+                        event.wheel.y * (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ?
+                            -1 :
+                            1);
                     break;
             }
         }
 
-        int32_t posX = input.left ? input.right ? 180 : 90 : input.right ? 270 : 180;
-        int32_t posY = input.swap ? input.down ? 120 : 60 : input.down ? 180 : 120;
+        int32_t posX = (input.left || input.scroll.x < 0) ? (input.right || input.scroll.x > 0) ? 180 : 90 : (input.right || input.scroll.x > 0) ? 270 : 180;
+        int32_t posY = (input.swap || input.scroll.y > 0) ? (input.down || input.scroll.y < 0) ? 120 : 60 : (input.down || input.scroll.y < 0) ? 180 : 120;
         Color color = input.drop ? Color{ 0, 1, 0 } : input.pause ? Color{ 1, 0, 0 } : Color{ 1, 1, 0 };
         int32_t width = input.turnLeft ? 180 : 360;
         int32_t height = input.turnRight ? 120 : 240;
