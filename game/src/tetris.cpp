@@ -1,7 +1,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <glad/glad.h>
+#include <cmath>
 #include <SDL.h>
 
 #include "color.h"
@@ -11,9 +13,17 @@
 #include "renderer.h"
 #include "vector.h"
 
+static void generateSineWave(int16_t* buffer, int sampleCount, int soundFreq, int start)
+{
+    for (int i = 0; i < sampleCount; i++)
+    {
+        buffer[i] = (int16_t)(sinf((((i + start) % soundFreq) / (float)soundFreq) * 3.1415f) * (INT16_MAX / 4));
+    }
+}
+
 int main()
 {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         // TODO: Logging.
         fprintf(stderr, "SDL initialization failed: %s\n", SDL_GetError());
         return 1;
@@ -46,6 +56,21 @@ int main()
         SDL_Quit();
         return 1;
     }
+
+    SDL_AudioSpec inputSpec, outputSpec;
+    inputSpec.freq = 48000;
+    inputSpec.format = AUDIO_S16;
+    inputSpec.channels = 1;
+    inputSpec.samples = 4096;
+    inputSpec.callback = nullptr;
+    inputSpec.userdata = nullptr;
+
+    SDL_AudioDeviceID device = SDL_OpenAudioDevice(nullptr, false, &inputSpec, &outputSpec, 0);
+    
+    int16_t* buffer = new int16_t[outputSpec.freq / 60];
+    int start = 0;
+
+    SDL_PauseAudioDevice(device, false);
 
     initRenderer(1, 720, 480);
 
@@ -138,13 +163,23 @@ int main()
             if (input.leftMouseButton || input.rightMouseButton || input.middleMouseButton)
                 color = Color{ 0, 1, 1 };
 
+        if (!input.pause) {
+            generateSineWave(buffer, outputSpec.freq / 60, outputSpec.freq / 400, start);
+            start = (start + (outputSpec.freq / 60)) % (outputSpec.freq / 400);
+            SDL_QueueAudio(device, buffer, (outputSpec.freq / 60) * sizeof(int16_t));
+        }
+
         beginDrawing();
         drawQuad(posX, posY, width, height, color);
         endDrawing();
         SDL_GL_SwapWindow(window);
     }
 
+    delete[] buffer;
+
     destroyRenderer();
+
+    SDL_CloseAudioDevice(device);
 
     SDL_Quit();
 }
